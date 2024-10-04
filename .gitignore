@@ -1,0 +1,70 @@
+# Composer dependencies
+/vendor/
+
+# Composer lock file (optional, depending on your workflow)
+composer.lock
+
+# Environment files
+.env.local
+.env.*.local
+
+# Logs
+/logs/*
+*.log
+
+# Temporary files
+/tmp/*
+/temp/*
+*.tmp
+
+# Cache files
+/cache/*
+/cache/*
+/cache.php
+
+# Sessions
+/sessions/*
+/session/*.sess
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# PHPUnit
+phpunit.xml
+phpunit.xml.dist
+/build/
+
+# IDE configurations
+/.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# macOS files
+.DS_Store
+
+# Windows files
+Thumbs.db
+ehthumbs.db
+
+# Backups
+*~ 
+*.bak
+*.swp
+
+# Node modules (if applicable)
+node_modules/
+
+# Frontend build artifacts (if applicable)
+public/assets/build/
+public/assets/dist/
+
+# Miscellaneous
+*.cache
+*.cache.php
+*.pid
+
+# Coverage reports
+coverage/
