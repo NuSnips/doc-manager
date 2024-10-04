@@ -180,3 +180,22 @@ Contains the Controllers that manages incoming request, validation, and response
     }
     ```
 
+### Instructions
+
+Clone the repo
+
+```
+gh repo clone NuSnips/doc-manager
+```
+
+Install dependencies
+
+```
+composer install
+```
+
+Run migrations
+
+```
+php vendor/bin/doctrine orm:schema-tool:create
+```
