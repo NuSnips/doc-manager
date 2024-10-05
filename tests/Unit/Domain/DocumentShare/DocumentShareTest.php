@@ -29,6 +29,18 @@ it('can generate a unique URL token', function () {
     expect($documentShare->getUrl())->toMatch('/[a-f0-9]{32}/');
 });
 
+it('can generate a shareable URL', function () {
+    $documentShare = new DocumentShare($this->document, $this->expiresAt);
+
+    // Set a custom prefix
+    $customPrefix = "/custom/download/";
+    $documentShare->setPrefix($customPrefix);
+    $generatedUrl = $documentShare->generateUrl();
+
+    expect($generatedUrl)->toStartWith($customPrefix);
+    expect($generatedUrl)->toEndWith($documentShare->getUrl());
+});
+
 it('can set and get the status', function () {
     $documentShare = new DocumentShare($this->document, $this->expiresAt);
     $documentShare->setStatus(false);
