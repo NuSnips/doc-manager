@@ -58,16 +58,15 @@ class DocumentShare
     public function __construct(Document $document,  DateTime $expires_at)
     {
         $this->document = $document;
-        $this->setUrlToken();
+        $this->url = $this->generateUniqueUrlToken();
         $this->expires_at = $expires_at;
         $this->created_at = new DateTime();
     }
 
-    private function setUrlToken()
+    private function generateUniqueUrlToken()
     {
-        // Generate a unique token for the URL
-        $token = bin2hex(random_bytes(16));
-        $this->url =  $token;
+        // Generate a unique value for the URL
+        return  bin2hex(random_bytes(16));
     }
     /**
      * @return \App\Domain\Document\Entity\Document
@@ -91,16 +90,6 @@ class DocumentShare
     public function getExpiresAt(): DateTime
     {
         return $this->expires_at;
-    }
-    /**
-     * @param string $url
-     * @return \App\Domain\DocumentShare\Entity\DocumentShare
-     */
-    public function setUrl(string $url): self
-    {
-        $this->url = $url;
-        $this->setUpdatedAt();
-        return $this;
     }
 
     public function getStatus(): bool
