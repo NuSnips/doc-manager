@@ -12,7 +12,7 @@ use Exception;
 class DeleteDocument
 {
 
-    public function __construct(private DocumentService $documentService) {}
+    public function __construct(private DocumentService $documentService, private DocumentStorage $documentStorage) {}
     public function execute(Document $document)
     {
         // Get the document
@@ -21,9 +21,8 @@ class DeleteDocument
             // Delete document from db.
             $this->documentService->deleteDocument($document->getId());
             // Delete document file.
-            $documentStorage = new DocumentStorage();
             $folderPath = explode(DIRECTORY_SEPARATOR, $document->getPath())[0];
-            $documentStorage->deleteFile($document->getName(), $folderPath);
+            $this->documentStorage->deleteFile($document->getName(), $folderPath);
         } catch (Exception $e) {
             throw new Exception("Error deleting document: " . $e->getMessage());
         }
