@@ -14,10 +14,9 @@ use Slim\Psr7\UploadedFile;
 class CreateDocument
 {
 
-    public function __construct(private DocumentService $documentService) {}
+    public function __construct(private DocumentService $documentService, private DocumentStorage $documentStorage) {}
     public function execute(array $uploadedFiles, User $user, array $tags = [])
     {
-        $documentStorage = new DocumentStorage();
 
         $email = $user->getEmail();
         // Save the uploaded file
@@ -25,7 +24,7 @@ class CreateDocument
             $uploadedFile = $uploadedFiles['document'];
             $fileName = str_replace(' ', '_', basename($uploadedFile->getClientFilename()));;
             try {
-                $fileUploaded = $documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
+                $fileUploaded = $this->documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
 
                 $data = [];
                 $filePath = $user->getEmail() . DIRECTORY_SEPARATOR . $fileName;
