@@ -143,9 +143,6 @@ class Document
 
     public function setMetadata(Metadata $metadata): self
     {
-        if ($this->metadata->getDocument() !== $this) {
-            $metadata->setDocument($this);
-        }
         $this->metadata = $metadata;
         return $this;
     }
