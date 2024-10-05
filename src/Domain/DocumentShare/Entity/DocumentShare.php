@@ -24,6 +24,7 @@ use Doctrine\ORM\Mapping\Table;
 class DocumentShare
 {
 
+    private string $prefix = "/documents/download/";
     #[Id]
     #[Column(type: 'integer')]
     #[GeneratedValue]
@@ -82,6 +83,24 @@ class DocumentShare
     public function getUrl(): string
     {
         return $this->url;
+    }
+
+    /**
+     * Set shareable URL prefix
+     * @param string $prefix
+     * @return void
+     */
+    public function setPrefix(string $prefix)
+    {
+        $this->prefix = $prefix;
+    }
+    /**
+     * Generate the shareable URL
+     * @return string
+     */
+    public function generateUrl()
+    {
+        return "{$this->prefix}{$this->getUrl()}";
     }
 
     /**
