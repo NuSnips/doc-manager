@@ -19,7 +19,7 @@ class TestCase extends BaseTestCase
 
 {
     protected $app;
-    protected $container;
+    public $container;
     protected $entityManager;
 
     protected function setUp(): void
@@ -35,6 +35,9 @@ class TestCase extends BaseTestCase
 
         $doctrine = require __DIR__ . "/../app/doctrine.php";
         $doctrine($this->container);
+
+        $elasticSearch = require __DIR__ . "/../app/elasticsearch.php";
+        $elasticSearch($this->container);
 
         $this->app = SlimAppFactory::create($this->container);
 

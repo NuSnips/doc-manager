@@ -36,6 +36,7 @@
     }
   },
   "require-dev": {
-    "pestphp/pest": "^1.23"
+    "pestphp/pest": "^1.23",
+    "mockery/mockery": "^1.6"
   }
 }

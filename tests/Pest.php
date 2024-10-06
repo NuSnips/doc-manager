@@ -1,5 +1,10 @@
 <?php
 
+use App\Domain\User\Entity\User;
+use App\Domain\User\Repository\UserRepository;
+use App\Domain\User\Service\AuthenticationService;
+use App\Infrastructure\Persistence\DoctrineUserRepository;
+use Firebase\JWT\JWT;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Headers;
@@ -17,21 +22,19 @@ use Slim\Psr7\Uri;
 |
 */
 
-uses(Tests\TestCase::class)->in('Unit');
+uses(Tests\TestCase::class)->in('Unit', 'Feature');
 
 /*
 |--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
+| Extend the expect() function for custom expectations in your tests.
 |
 */
 
 expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+    return test()->toBe(1);
 });
 
 /*
@@ -39,9 +42,7 @@ expect()->extend('toBeOne', function () {
 | Functions
 |--------------------------------------------------------------------------
 |
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
+| Define helper functions to reduce repetitive code across your test files.
 |
 */
 
@@ -67,4 +68,47 @@ function createRequest(
 function jsonDecode(string $response)
 {
     return json_decode($response, true);
+}
+
+function setAuthorizationHeader(string $token): void
+{
+    $_SERVER['HTTP_AUTHORIZATION'] = "Bearer $token";
+}
+
+function createJwtToken($userId, $expiration = 3600): string
+{
+    $payload = [
+        'sub' => $userId,
+        'iat' => time(),
+        'exp' => time() + $expiration,
+    ];
+
+    $jwtSecret = $_ENV['JWT_SECRET'];
+
+    return JWT::encode($payload, $jwtSecret, 'HS256');
+}
+function container()
+{
+    return test()->container;
+}
+function authenticatedUser()
+{
+    // Create and store a user for authentication
+    $userRepository = container()->get(UserRepository::class);
+    $authService = container()->get(AuthenticationService::class);
+
+    // Store user for the test
+    $stored = $userRepository->findByEmail("jane@email.com");
+    if ($stored === null) {
+        $stored = new User("Jane", "Smith", "jane@email.com", "password");
+        $userRepository->store($stored);
+    }
+
+
+    // Generate JWT token for authentication
+    $jwt = createJwtToken($stored->getId());
+    setAuthorizationHeader($jwt);
+
+    // Retrieve the authenticated user via the service
+    return $authService->getUser($jwt);
 }
