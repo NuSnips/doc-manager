@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Action;
 
 use App\Application\Service\DocumentService;
+use App\Domain\Document\Entity\Document;
 use App\Domain\Document\Storage\DocumentStorageInterface;
 use App\Domain\User\Entity\User;
 use App\Infrastructure\Storage\DocumentStorage;
@@ -16,7 +17,7 @@ class CreateDocument
 {
 
     public function __construct(private DocumentService $documentService, private DocumentStorageInterface $documentStorage) {}
-    public function execute(array $uploadedFiles, User $user, array $tags = [])
+    public function execute(array $uploadedFiles, User $user, array $tags = []): ?Document
     {
 
         $email = $user->getEmail();
@@ -38,8 +39,7 @@ class CreateDocument
                 $data['size'] = $fileSize . "";
                 $data['user'] = $user;
                 $data['tags'] = $tags ?? '';
-                $document = $this->documentService->createDocument($data);
-                return true;
+                return $this->documentService->createDocument($data);
             } catch (Exception $e) {
                 throw new Exception($e->getMessage());
             }
