@@ -6,6 +6,9 @@ use DI\Container;
 use DI\Bridge\Slim\Bridge as SlimAppFactory;
 use Dotenv\Dotenv;
 
+// Set the default time zone 
+date_default_timezone_set('Asia/Colombo');
+
 require __DIR__ . "/../vendor/autoload.php";
 
 // Load environment variables
