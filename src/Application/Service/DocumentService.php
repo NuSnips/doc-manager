@@ -8,10 +8,14 @@ use App\Domain\Document\Entity\Document;
 use App\Domain\Document\Entity\Metadata;
 use App\Domain\Document\Repository\DocumentRepository;
 use App\Domain\Document\Service\DocumentServiceInterface;
+use App\Infrastructure\Persistence\ElasticSearchDocumentRepository;
 
 class DocumentService implements DocumentServiceInterface
 {
-    public function __construct(private DocumentRepository $documentRepository) {}
+    public function __construct(
+        private DocumentRepository $documentRepository,
+        private ElasticSearchDocumentRepository $elasticSearchDocumentRepository
+    ) {}
 
     public function getDocuments(): array
     {
@@ -55,6 +59,9 @@ class DocumentService implements DocumentServiceInterface
 
     public function search(string $searchTerm): array
     {
-        return $this->documentRepository->search($searchTerm);
+        // Get the IDs from elastic
+        $ids = $this->elasticSearchDocumentRepository->search($searchTerm);
+        // Use the IDs to query the db
+        return $this->documentRepository->findByIds($ids);
     }
 }

@@ -58,7 +58,7 @@ return function (ContainerInterface $container) {
     $container->set(UserServiceInterface::class, fn() => new UserService(new DoctrineUserRespository($container->get(EntityManager::class)), $container->get(DocumentStorageInterface::class)));
     $container->set(DocumentStorageInterface::class, fn() => new DocumentStorage($container->get('settings')['storage']['base_path']));
     $container->set(AuthenticationService::class, fn() => new DoctrineAuthService($container->get(EntityManager::class), $container->get(UserRepository::class)));
-    $container->set(DocumentServiceInterface::class, fn() => new DocumentService($container->get(DocumentRepository::class)));
+    $container->set(DocumentServiceInterface::class, fn() => new DocumentService($container->get(DocumentRepository::class), $container->get(ElasticSearchDocumentRepository::class)));
     $container->set(DocumentShareRepository::class, fn() => new DoctrineDocumentShareRepository($container->get(EntityManager::class)));
     $container->set(ElasticSearchDocumentRepository::class, fn() => new ElasticSearchDocumentRepository($container->get(Client::class)));
 };

@@ -38,6 +38,7 @@ class DocumentController
     {
         // Search if query available
         $queryParams = $request->getQueryParams();
+        
         if (isset($queryParams['q']) && $queryParams['q'] != null) {
             $documents = $this->documentService->search($queryParams['q']);
         } else {

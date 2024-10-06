@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Document\Repository;
 
 use App\Domain\Document\Entity\Document;
+use Doctrine\Common\Collections\Collection;
 
 interface DocumentRepository
 {
@@ -15,4 +16,6 @@ interface DocumentRepository
     public function save(Document $document): ?Document;
     public function delete(int $id): void;
     public function search(string $query): array;
+
+    public function findByIds(array $ids): array;
 }
