@@ -4,6 +4,7 @@ use App\Application\Service\DocumentService;
 use App\Application\Service\UserService;
 use App\Domain\Document\Repository\DocumentRepository;
 use App\Domain\Document\Service\DocumentServiceInterface;
+use App\Domain\Document\Storage\DocumentStorageInterface;
 use App\Domain\DocumentShare\Repository\DocumentShareRepository;
 use App\Domain\User\Repository\UserRepository;
 use App\Domain\User\Service\AuthenticationService;
@@ -39,6 +40,9 @@ return function (ContainerInterface $container) {
                     'charset' => 'utf8mb4'
                 ]
             ],
+            'storage' => [
+                'base_path' => public_path($_ENV['UPLOAD_DIR'])
+            ],
             'elasticsearch' => [
                 'host' => $_ENV['ELASTICSEARCH_HOST'],
                 'api_key' => $_ENV['ELASTICSEARCH_API_KEY']
@@ -51,7 +55,8 @@ return function (ContainerInterface $container) {
         $container->get(AuthenticationService::class),
         $container->get(ElasticSearchDocumentRepository::class)
     ));
-    $container->set(UserServiceInterface::class, fn() => new UserService(new DoctrineUserRespository($container->get(EntityManager::class)), new DocumentStorage()));
+    $container->set(UserServiceInterface::class, fn() => new UserService(new DoctrineUserRespository($container->get(EntityManager::class)), $container->get(DocumentStorageInterface::class)));
+    $container->set(DocumentStorageInterface::class, fn() => new DocumentStorage($container->get('settings')['storage']['base_path']));
     $container->set(AuthenticationService::class, fn() => new DoctrineAuthService($container->get(EntityManager::class), $container->get(UserRepository::class)));
     $container->set(DocumentServiceInterface::class, fn() => new DocumentService($container->get(DocumentRepository::class)));
     $container->set(DocumentShareRepository::class, fn() => new DoctrineDocumentShareRepository($container->get(EntityManager::class)));
