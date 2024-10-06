@@ -45,7 +45,7 @@ class Document
     #[OneToMany(targetEntity: DocumentShare::class, mappedBy: 'document', cascade: ['persist', 'remove'])]
     private ?Collection $documentShares = null;
 
-    #[OneToOne(targetEntity: Metadata::class, mappedBy: 'document', cascade: ['persist'])]
+    #[OneToOne(targetEntity: Metadata::class, mappedBy: 'document', cascade: ['persist', 'remove'])]
     private Metadata $metadata;
 
     #[Column(name: 'created_at', type: 'datetime')]
