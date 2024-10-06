@@ -194,6 +194,15 @@ Install dependencies
 composer install
 ```
 
+Create MySQL database
+
+```
+mysql -u root -p
+
+CREATE DATABASE document_db;
+
+```
+
 Run migrations
 
 ```

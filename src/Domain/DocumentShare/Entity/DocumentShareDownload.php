@@ -88,20 +88,4 @@ class DocumentShareDownload
     {
         $this->updated_at = new DateTime();
     }
-
-    /**
-     * @return DateTime
-     */
-    public function getCreatedAt()
-    {
-        return $this->created_at;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getUpdatedAt()
-    {
-        return $this->updated_at;
-    }
 }

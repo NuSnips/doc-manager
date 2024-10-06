@@ -7,6 +7,7 @@ namespace App\Domain\User\Entity;
 use App\Domain\Document\Entity\Document;
 use App\Domain\User\ValueObject\Fullname;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
@@ -124,10 +125,14 @@ class User
 
     public function addDocument(Document $document): self
     {
+        if (!isset($this->documents)) {
+            $this->documents = new ArrayCollection();
+        }
         if (!$this->documents->contains($document)) {
             $this->documents->add($document);
             $document->setUser($this);
         }
+
         return $this;
     }
 

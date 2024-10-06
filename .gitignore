@@ -32,7 +32,7 @@ composer.lock
 *.db
 
 # PHPUnit
-phpunit.xml
+# phpunit.xml
 phpunit.xml.dist
 /build/
 
@@ -65,6 +65,8 @@ public/assets/dist/
 *.cache
 *.cache.php
 *.pid
+
+/public/storage
 
 # Coverage reports
 coverage/

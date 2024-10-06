@@ -7,6 +7,7 @@ namespace App\Presentation\Controllers;
 use App\Application\Action\CreateDocument;
 use App\Application\Action\DeleteDocument;
 use App\Domain\Document\Service\DocumentServiceInterface;
+use App\Domain\Document\Storage\DocumentStorageInterface;
 use App\Domain\DocumentShare\Entity\DocumentShare;
 use App\Domain\DocumentShare\Repository\DocumentShareRepository;
 use App\Domain\User\ValueObject\Token;
@@ -101,8 +102,8 @@ class DocumentController
         $tags = $data['tags'] ?? [];
         // TODO: Valdidate and sanitize data
         try {
-            // Upload document
-            $uploadedFile = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
+            // Create document
+            $document = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
             $response->getBody()->write(json_encode(['success' => true, 'message' =>  'Document created successfully.']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
         } catch (Exception $e) {
@@ -175,7 +176,7 @@ class DocumentController
      * @param string $token
      * @return Response
      */
-    public function download(Request $request, Response $response, string $token)
+    public function downloadDocument(Request $request, Response $response, string $token, DocumentStorageInterface $documentStorage)
     {
         // TODO: Valdidate and sanitize data
 
@@ -189,8 +190,7 @@ class DocumentController
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Document not found.']));
             return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
         }
-        $documentStorage = new DocumentStorage();
-        $documentStorage->download($document);
+        $documentStorage->downloadDocument($document);
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
     }
 }

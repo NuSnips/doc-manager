@@ -1,99 +1,93 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Infrastructure\Storage;
 
 use App\Domain\Document\Entity\Document;
+use App\Domain\Document\Storage\DocumentStorageInterface;
 use Exception;
-use Slim\Psr7\UploadedFile;
+use Psr\Http\Message\UploadedFileInterface;
 
-
-class DocumentStorage
+class DocumentStorage implements DocumentStorageInterface
 {
-    private string $baseStoragePath;
 
-    public function __construct()
+
+    public function __construct(private string $baseStoragePath)
     {
-        $this->baseStoragePath = public_path($_ENV['UPLOAD_DIR']);
-        if (!is_dir($this->baseStoragePath)) {
-            mkdir($this->baseStoragePath, 0755, true);
+        $this->ensureDirectoryExists($this->baseStoragePath);
+    }
+    public function saveUploadedFile(string $fileName, UploadedFileInterface $uploadedFile, ?string $folderPath = null): void
+    {
+        $this->validateUploadedFile($uploadedFile);
+        $fullPath = $this->getFullPath($fileName, $folderPath);
+
+        $uploadedFile->moveTo($fullPath);
+    }
+
+    public function deleteFile(string $fileName, ?string $folderPath = null): void
+    {
+        $fullPath = $this->getFullPath($fileName, $folderPath);
+
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        } else {
+            throw new Exception("File not found: $fullPath");
         }
     }
-    public function saveUploadedFile(string $fileName, UploadedFile $uploadedFile, ?string $folderPath = null): bool
+
+    public function fileExists(string $fileName, ?string $folderPath = null): bool
+    {
+        return false;
+    }
+
+    public function getFullPath(string $fileName, ?string $folderPath = null): string
+    {
+        $path = $this->baseStoragePath;
+        if ($folderPath != null) {
+            $path .= "/" . trim($folderPath);
+        }
+        return $path . "/" . $fileName;
+    }
+
+    public function createFolder(string $folderName): void
+    {
+        $folderPath = $this->baseStoragePath . "/" . $folderName;
+        $this->ensureDirectoryExists($folderPath);
+    }
+
+    public function downloadDocument(Document $document): void
+    {
+        $filePath = $this->getFullPath($document->getName(), $document->getPath());
+
+        if (!file_exists($filePath)) {
+            throw new Exception("File not found: $filePath");
+        }
+        $this->outputFileForDownload($filePath);
+    }
+
+    private function ensureDirectoryExists(string $path): void
+    {
+        if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {
+            throw new Exception("Failed to create directory: $path");
+        }
+    }
+
+    private function validateUploadedFile(UploadedFileInterface $uploadedFile): void
     {
         if ($uploadedFile->getError() !== UPLOAD_ERR_OK) {
             throw new Exception("File upload error: " . $this->getUploadErrorMessage($uploadedFile->getError()));
         }
-
-        $fullPath = $this->getFullPath($fileName, $folderPath);
-        $uploadedFile->moveTo($fullPath);
-        return true;
     }
-
-    public function deleteFile(string $fileName, ?string $folderPath = null): bool
+    private function outputFileForDownload(string $filePath): void
     {
-        $fullPath = $this->baseStoragePath . "/" . $folderPath . "/" . $fileName;
-
-        if ($this->fileExists($fileName, $folderPath)) {
-            unlink($fullPath);
-            return true;
-        }
-        return false;
-    }
-
-    private function fileExists(string $fileName, string $folderPath): bool
-    {
-        $fullPath = $this->baseStoragePath . "/" . $folderPath . "/" . $fileName;
-        return file_exists($fullPath);
-    }
-
-    /**
-     * @param string $fileName
-     * @param mixed $folderPath
-     * @return string
-     */
-    public function getFullPath(string $fileName, ?string $folderPath = null): string
-    {
-        // Base storage path
-        $path = $this->baseStoragePath;
-        // If a folder path is provided, append it to the base path
-        if ($folderPath !== null) {
-            // Trim any leading or trailing slashes from the folder path
-            $folderPath = trim($folderPath, '/');
-            if ($folderPath !== '') {
-                $path .= '/' . $folderPath;
-            }
-        }
-        // Append the file name to the path
-        return $path . '/' . $fileName;
-    }
-
-    public function createFolder(string $folderName)
-    {
-        // Check if folder exists.
-        $folderExists = is_dir($this->baseStoragePath . '/' . $folderName);
-        if (!$folderExists) {
-            mkdir($this->baseStoragePath . '/' . $folderName, 0775, true);
-        }
-    }
-
-    public function download(Document $document)
-    {
-        $folderPath = explode(DIRECTORY_SEPARATOR, $document->getPath())[0];
-        $filePath = $this->baseStoragePath . "/" . $folderPath . "/" . $document->getName();
-        if (file_exists($filePath)) {
-
-            header('Content-Description: File Transfer');
-            header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
-            header('Expires: 0');
-            header('Cache-Control: must-revalidate');
-            header('Pragma: public');
-            header('Content-Length: ' . filesize($filePath));
-            readfile($filePath);
-            exit;
-        }
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
     }
 
     private function getUploadErrorMessage(int $errorCode): string

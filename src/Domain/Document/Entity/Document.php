@@ -38,7 +38,7 @@ class Document
     #[Column(name: 'path', type: 'string', length: 255)]
     private string $path;
 
-    #[ManyToOne(targetEntity: User::class, inversedBy: 'documents')]
+    #[ManyToOne(targetEntity: User::class, inversedBy: 'documents', cascade: ['persist'])]
     #[JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
     private User $user;
 
@@ -143,9 +143,9 @@ class Document
 
     public function setMetadata(Metadata $metadata): self
     {
-        if ($this->metadata->getDocument() !== $this) {
-            $metadata->setDocument($this);
-        }
+        // if ($this->metadata->getDocument() !== $this) {
+        //     $metadata->setDocument($this);
+        // }
         $this->metadata = $metadata;
         return $this;
     }
