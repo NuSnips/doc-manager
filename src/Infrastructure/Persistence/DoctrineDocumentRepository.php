@@ -75,4 +75,18 @@ class   DoctrineDocumentRepository implements DocumentRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findByIds(array $ids): array
+    {
+        $user = $this->authenticationService->getUser(getallheaders()['Authorization']);
+        return $this->entityManager->createQueryBuilder()
+            ->select('doc')
+            ->from(Document::class, 'doc')
+            ->where('doc.id IN (:ids)')
+            ->andWhere('doc.user = :user_id')
+            ->setParameter('ids', $ids)
+            ->setParameter('user_id', $user->getId())
+            ->getQuery()
+            ->getResult();
+    }
 }

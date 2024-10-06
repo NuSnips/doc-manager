@@ -5,11 +5,15 @@ use App\Domain\Document\Entity\Document;
 use App\Domain\Document\Entity\Metadata;
 use App\Domain\Document\Repository\DocumentRepository;
 use App\Domain\User\Entity\User;
+use App\Infrastructure\Persistence\ElasticSearchDocumentRepository;
 
-
+beforeEach(function () {
+    $this->documentRepository = Mockery::mock(DocumentRepository::class);
+    $this->elasticSearchDocumentRepository = Mockery::mock(ElasticSearchDocumentRepository::class);
+    $this->documentService = new DocumentService($this->documentRepository, $this->elasticSearchDocumentRepository);
+});
 it('can create a document and return it', function () {
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentService = new DocumentService($documentRepository);
+
     $data = [
         'name' => 'doc1',
         'path' => '/path/to/doc1',
@@ -22,7 +26,7 @@ it('can create a document and return it', function () {
 
     $document = new Document($data['name'], $data['path'], new Metadata(), $data['user']);
 
-    $documentRepository
+    $this->documentRepository
         ->shouldReceive('save')
         ->once()
         ->with(Mockery::on(function ($arg) use ($document) {
@@ -30,7 +34,7 @@ it('can create a document and return it', function () {
         }))
         ->andReturn($document);
 
-    $result = $documentService->createDocument($data);
+    $result = $this->documentService->createDocument($data);
     expect($result)->toEqual($document);
 });
 it('gets all documents', function () {
@@ -43,12 +47,10 @@ it('gets all documents', function () {
         )
     ];
 
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('findAll')->once()->andReturn($documents);
+    $this->documentRepository->shouldReceive('findAll')->once()->andReturn($documents);
 
-    $documentService = new DocumentService($documentRepository);
 
-    $result = $documentService->getDocuments();
+    $result = $this->documentService->getDocuments();
     expect($result)->toEqual($documents);
 });
 
@@ -61,50 +63,41 @@ it('gets a document by id', function () {
         new User("Jane", "Smith", "jane@email.com", "password")
     );
 
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('findById')->with($documentId)->once()->andReturn($document);
+    $this->documentRepository->shouldReceive('findById')->with($documentId)->once()->andReturn($document);
 
-    $documentService = new DocumentService($documentRepository);
 
-    $result = $documentService->getDocument($documentId);
+    $result = $this->documentService->getDocument($documentId);
     expect($result)->toEqual($document);
 });
 
 it('returns null when document is not found', function () {
     $documentId = 1;
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('findById')->with($documentId)->once()->andReturn(null);
+    $this->documentRepository->shouldReceive('findById')->with($documentId)->once()->andReturn(null);
 
-    $documentService = new DocumentService($documentRepository);
 
-    $result = $documentService->getDocument($documentId);
+    $result = $this->documentService->getDocument($documentId);
     expect($result)->toBeNull();
 });
 
 it('deletes a document by id', function () {
     $documentId = 1;
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('delete')->with($documentId)->once();
+    $this->documentRepository->shouldReceive('delete')->with($documentId)->once();
 
-    $documentService = new DocumentService($documentRepository);
 
-    expect(function () use ($documentService, $documentId) {
-        $documentService->deleteDocument($documentId);
+    expect(function () use ($documentId) {
+        $this->documentService->deleteDocument($documentId);
     })->not()->toThrow(Exception::class);
 });
 
 it('will throw an exception if document deletion fails', function () {
     $documentId = 1;
 
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('delete')->with($documentId)->andThrow(new \Exception('Deletion failed'));
+    $this->documentRepository->shouldReceive('delete')->with($documentId)->andThrow(new \Exception('Deletion failed'));
 
-    $documentService = new DocumentService($documentRepository);
-
-    expect(fn() => $documentService->deleteDocument($documentId))->toThrow(\Exception::class, 'Deletion failed');
+    expect(fn() => $this->documentService->deleteDocument($documentId))->toThrow(\Exception::class, 'Deletion failed');
 });
 
-it('can search for documents', function () {
+it('returns documents matching the search term', function () {
     // Arrange
     $searchTerm = 'another';
     $documents = [
@@ -112,14 +105,10 @@ it('can search for documents', function () {
         new Document('another-file.txt', '/path/to/another-file.txt', new Metadata(), new User("Jack", "Smith", "jack@email.com", "password"),),
     ];
 
-    $documentRepository = Mockery::mock(DocumentRepository::class);
-    $documentRepository->shouldReceive('search')->with($searchTerm)->once()->andReturn($documents);
+    $this->elasticSearchDocumentRepository->shouldReceive('search')->with($searchTerm)->once()->andReturn([1, 2]);
+    $this->documentRepository->shouldReceive('findByIds')->with([1, 2])->once()->andReturn([$documents[0], $documents[1]]);
+    // $this->documentRepository->shouldReceive('search')->with($searchTerm)->once()->andReturn($documents);
+    $result = $this->documentService->search($searchTerm);
 
-    $documentService = new DocumentService($documentRepository);
-
-    // Act
-    $result = $documentService->search($searchTerm);
-
-    // Assert
     expect($result)->toEqual($documents);
 });
