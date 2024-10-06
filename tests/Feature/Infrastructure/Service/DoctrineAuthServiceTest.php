@@ -15,7 +15,7 @@ beforeEach(function () {
     $this->authenticationService = container()->get(AuthenticationService::class);
 
     $this->user = new User("Jane", "Smith", "jane@email.com", "password");
-    $this->userRepository->store($this->user);
+    $this->userRepository->save($this->user);
 });
 it('authenticates a user with valid credentials', function () {
     $user = $this->authenticationService->authenticate("jane@email.com", "password");

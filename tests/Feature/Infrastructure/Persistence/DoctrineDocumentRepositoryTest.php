@@ -3,6 +3,8 @@
 use App\Domain\Document\Entity\Document;
 use App\Domain\Document\Entity\Metadata;
 use App\Domain\User\Entity\User;
+use App\Domain\User\Repository\UserRepository;
+use App\Domain\User\Service\AuthenticationService;
 use App\Infrastructure\Persistence\DoctrineDocumentRepository;
 use App\Infrastructure\Persistence\DoctrineUserRespository;
 use App\Infrastructure\Persistence\ElasticSearchDocumentRepository;
@@ -10,9 +12,13 @@ use App\Infrastructure\Service\DoctrineAuthService;
 use Doctrine\ORM\EntityManager;
 
 beforeEach(function () {
+    // Get the EntityManager from container
     $this->entityManager = $this->container->get(EntityManager::class);
+    // Get the ElasticSearchDocumentRepository from container
     $this->elasticSearchDocumentRepository = $this->container->get(ElasticSearchDocumentRepository::class);
-    $this->authenticationService = $this->container->get(DoctrineAuthService::class);
+    $this->authenticationService = $this->container->get(AuthenticationService::class);
+    $this->userRepository = $this->container->get(UserRepository::class);
+
     $this->documentRepository = new DoctrineDocumentRepository(
         $this->entityManager,
         $this->authenticationService,
@@ -24,11 +30,15 @@ beforeEach(function () {
         ->setType("text/plain");
 
     // Create a document by another user
+    // Create another user
+    $this->otherUser = new User("Ben", "Smith", "another-user@example.com", "password");
+    $this->userRepository->save($this->otherUser);
+    // Create another document
     $this->otherUserDocument = new Document(
         "file.txt",
         "path/to/file.txt",
         $this->metadata,
-        new User("Ben", "Smith", "another-user@example.com", "password")
+        $this->otherUser
     );
     $this->metadata->setDocument($this->otherUserDocument);
     $this->documentRepository->save($this->otherUserDocument);
@@ -43,7 +53,7 @@ beforeEach(function () {
     $this->documentRepository->save($this->document);
 });
 
-it('can store a document', function () {
+it('can store a document in the db', function () {
     $newDocument = new Document(
         "another-file.txt",
         "path/to/another-file.txt",
