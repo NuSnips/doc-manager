@@ -32,8 +32,7 @@ class DocumentService implements DocumentServiceInterface
         $metaData->setTags($data['tags']);
         $metaData->setDocument($document);
 
-        $this->documentRepository->save($document);
-        return null;
+        return $this->documentRepository->save($document);
     }
 
     public function createDocumentShare(Document $document): ?Document
