@@ -46,9 +46,7 @@ class DocumentService implements DocumentServiceInterface
 
     public function deleteDocument(int $id): void
     {
-
         try {
-
             $this->documentRepository->delete($id);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
