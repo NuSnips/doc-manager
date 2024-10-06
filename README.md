@@ -208,3 +208,9 @@ Run migrations
 ```
 php vendor/bin/doctrine orm:schema-tool:create
 ```
+
+Run tests
+
+```
+php vendor/bin/pest
+```
