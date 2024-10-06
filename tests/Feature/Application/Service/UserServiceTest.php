@@ -9,7 +9,7 @@ it('can register a new user and creates a storage folder', function () {
     $user->shouldReceive('getEmail')->andReturn('test@example.com');
 
     $doctrineUserRespository = Mockery::mock(DoctrineUserRespository::class);
-    $doctrineUserRespository->shouldReceive('store')->with($user)->once();
+    $doctrineUserRespository->shouldReceive('save')->with($user)->once();
 
     $documentStorage = Mockery::mock(DocumentStorage::class);
     $documentStorage->shouldReceive('createFolder')->with('test@example.com')->once();
@@ -27,7 +27,7 @@ it('throws an exception if user registration fails', function () {
     $user->shouldReceive('getEmail')->andReturn('test@example.com');
 
     $doctrineUserRespository = Mockery::mock(DoctrineUserRespository::class);
-    $doctrineUserRespository->shouldReceive('store')->with($user)->andThrow(new Exception('Registration failed'));
+    $doctrineUserRespository->shouldReceive('save')->with($user)->andThrow(new Exception('Registration failed'));
 
     $documentStorage = Mockery::mock(DocumentStorage::class);
 
