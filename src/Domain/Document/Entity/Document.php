@@ -38,14 +38,14 @@ class Document
     #[Column(name: 'path', type: 'string', length: 255)]
     private string $path;
 
-    #[ManyToOne(targetEntity: User::class, inversedBy: 'documents', cascade: ['persist'])]
+    #[ManyToOne(targetEntity: User::class, inversedBy: 'documents')]
     #[JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
     private User $user;
 
     #[OneToMany(targetEntity: DocumentShare::class, mappedBy: 'document', cascade: ['persist', 'remove'])]
     private ?Collection $documentShares = null;
 
-    #[OneToOne(targetEntity: Metadata::class, mappedBy: 'document', cascade: ['persist', 'remove'])]
+    #[OneToOne(targetEntity: Metadata::class, mappedBy: 'document', cascade: ['persist'])]
     private Metadata $metadata;
 
     #[Column(name: 'created_at', type: 'datetime')]
@@ -59,6 +59,7 @@ class Document
         $this->name = $name;
         $this->path = $path;
         $this->metadata = $metadata;
+        $this->metadata->setDocument($this);
         $this->user = $user;
         $this->created_at = new DateTime();
     }
@@ -94,34 +95,20 @@ class Document
         return $this->path;
     }
 
-    /**
-     * @return \DateTime
-     */
     public function getCreatedAt(): DateTime
     {
         return $this->created_at;
     }
 
-    /**
-     * @return \DateTime
-     */
     public function getUpdatedAt(): DateTime
     {
         return $this->updated_at;
     }
-
-    /**
-     * @return \Doctrine\Common\Collections\Collection
-     */
     public function getDocumentShares(): Collection
     {
         return $this->documentShares;
     }
 
-    /**
-     * @param \App\Domain\DocumentShare\Entity\DocumentShare $documentShare
-     * @return \App\Domain\Document\Entity\Document
-     */
     public function addDocumentShare(DocumentShare $documentShare): self
     {
         // if documentShares is null, initialize it
@@ -143,9 +130,9 @@ class Document
 
     public function setMetadata(Metadata $metadata): self
     {
-        // if ($this->metadata->getDocument() !== $this) {
-        //     $metadata->setDocument($this);
-        // }
+        if ($this->metadata->getDocument() !== $this) {
+            $metadata->setDocument($this);
+        }
         $this->metadata = $metadata;
         return $this;
     }

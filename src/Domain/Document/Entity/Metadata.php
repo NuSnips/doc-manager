@@ -15,6 +15,7 @@ use Doctrine\ORM\Mapping\OneToOne;
 use Doctrine\ORM\Mapping\PrePersist;
 use Doctrine\ORM\Mapping\PreUpdate;
 use Doctrine\ORM\Mapping\Table;
+use Exception;
 
 #[Entity]
 #[Table(name: 'document_metadata')]
@@ -60,9 +61,11 @@ class Metadata
      */
     public function getDocument(): Document
     {
+        if ($this->document === null) {
+            throw new Exception('Document is not set.');
+        }
         return $this->document;
     }
-
     /**
      * @param \App\Domain\Document\Entity\Document $document
      * @return \App\Domain\Document\Entity\Metadata
@@ -75,6 +78,7 @@ class Metadata
         }
         return $this;
     }
+
 
     /**
      * @return int
