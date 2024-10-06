@@ -102,8 +102,8 @@ class DocumentController
         $tags = $data['tags'] ?? [];
         // TODO: Valdidate and sanitize data
         try {
-            // Upload document
-            $uploadedFile = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
+            // Create document
+            $document = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
             $response->getBody()->write(json_encode(['success' => true, 'message' =>  'Document created successfully.']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
         } catch (Exception $e) {
