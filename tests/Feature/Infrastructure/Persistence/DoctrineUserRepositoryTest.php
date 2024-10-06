@@ -18,7 +18,7 @@ beforeEach(function () {
 it('stores a user', function () {
     $user = new User('John', 'Doe', 'john@email.com', 'password');
 
-    $this->userRepository->store($user);
+    $this->userRepository->save($user);
     $storedUser = $this->userRepository->findByEmail('john@email.com');
     expect($storedUser)->not()->toBeNull()
         ->and($storedUser->getEmail())->toBe('john@email.com');
@@ -27,7 +27,7 @@ it('stores a user', function () {
 it('can find a user by ID', function () {
     $user = new User('Jane', 'Doe', 'jane.doe@example.com', 'password');
 
-    $this->userRepository->store($user);
+    $this->userRepository->save($user);
     $storedUser = $this->userRepository->findByEmail('jane.doe@example.com');
 
     // Find the user by ID
@@ -38,7 +38,7 @@ it('can find a user by ID', function () {
 
 it('can find a user by email', function () {
     $user = new User('Jane', 'Smith', 'jane@email.com', 'password');
-    $this->userRepository->store($user);
+    $this->userRepository->save($user);
 
     // Find user by email
     $foundUser = $this->userRepository->findByEmail('jane@email.com');

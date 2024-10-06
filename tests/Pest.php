@@ -99,9 +99,10 @@ function authenticatedUser()
 
     // Store user for the test
     $stored = $userRepository->findByEmail("jane@email.com");
+
     if ($stored === null) {
         $stored = new User("Jane", "Smith", "jane@email.com", "password");
-        $userRepository->store($stored);
+        $userRepository->save($stored);
     }
 
 

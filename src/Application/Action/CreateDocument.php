@@ -21,28 +21,31 @@ class CreateDocument
     {
 
         $email = $user->getEmail();
+        // Check if uploadedFiles contains the document
+        if (!isset($uploadedFiles['document']) || !$uploadedFiles['document'] instanceof UploadedFileInterface) {
+            return null;
+        }
         // Save the uploaded file
-        if ($uploadedFiles) {
-            $uploadedFile = $uploadedFiles['document'];
-            $fileName = time() . "_" . $uploadedFile->getClientFilename();
-            $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-            try {
-                $this->documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
+        $uploadedFile = $uploadedFiles['document'];
+        $fileName = time() . "_" . $uploadedFile->getClientFilename();
+        // $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
 
-                $data = [];
-                $filePath = $user->getEmail();
-                $fileType = $uploadedFile->getClientMediaType();
-                $fileSize = $uploadedFile->getSize(); // bytes
-                $data['name'] = $fileName;
-                $data['path'] = $filePath;
-                $data['type'] = $fileType;
-                $data['size'] = $fileSize . "";
-                $data['user'] = $user;
-                $data['tags'] = $tags ?? '';
-                return $this->documentService->createDocument($data);
-            } catch (Exception $e) {
-                throw new Exception($e->getMessage());
-            }
+        try {
+            $this->documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
+
+            $data = [];
+            $filePath = $user->getEmail();
+            $fileType = $uploadedFile->getClientMediaType();
+            $fileSize = $uploadedFile->getSize(); // bytes
+            $data['name'] = $fileName;
+            $data['path'] = $filePath;
+            $data['type'] = $fileType;
+            $data['size'] = $fileSize . "";
+            $data['user'] = $user;
+            $data['tags'] = $tags ?? '';
+            return $this->documentService->createDocument($data);
+        } catch (Exception $e) {
+            throw new Exception('Error while creating document: ' . $e->getMessage());
         }
     }
 }

@@ -18,6 +18,7 @@ class DeleteDocument
     {
         // Get the document
         $document = $this->documentService->getDocument($document->getId());
+
         try {
             // Delete document from db.
             $this->documentService->deleteDocument($document->getId());

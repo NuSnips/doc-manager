@@ -13,10 +13,11 @@ class DoctrineUserRespository implements UserRepository
 
     public function __construct(private EntityManager $entityManager) {}
 
-    public function store(User $user): void
+    public function save(User $user): ?User
     {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        return $user;
     }
     public function findAll(): array
     {

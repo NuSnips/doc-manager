@@ -17,7 +17,7 @@ class UserService implements UserServiceInterface
     public function registerUser(User $user): User
     {
         try {
-            $this->doctrineUserRespository->store($user);
+            $this->doctrineUserRespository->save($user);
             // When user is registered create folder for that user
             $this->documentStorage->createFolder($user->getEmail());
         } catch (Exception $e) {
