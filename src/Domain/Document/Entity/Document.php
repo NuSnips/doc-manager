@@ -70,36 +70,25 @@ class Document
     {
         return $this->id;
     }
-
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return \App\Domain\User\Entity\User
-     */
     public function getUser(): User
     {
         return $this->user;
     }
 
-    /**
-     * @return string
-     */
+
     public function getPath(): string
     {
         return $this->path;
     }
-
     public function getCreatedAt(): DateTime
     {
         return $this->created_at;
     }
-
     public function getUpdatedAt(): DateTime
     {
         return $this->updated_at;
@@ -136,30 +125,19 @@ class Document
         $this->metadata = $metadata;
         return $this;
     }
-    /**
-     * @param string $name
-     * @return \App\Domain\Document\Entity\Document
-     */
+
     public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
     }
 
-    /**
-     * @param string $path
-     * @return \App\Domain\Document\Entity\Document
-     */
     public function setPath(string $path): self
     {
         $this->path = $path;
         return $this;
     }
 
-    /**
-     * @param \App\Domain\User\Entity\User $user
-     * @return \App\Domain\Document\Entity\Document
-     */
     public function setUser(User $user): self
     {
         $this->user = $user;
@@ -168,9 +146,6 @@ class Document
 
 
     #[PrePersist]
-    /**
-     * @return void
-     */
     public function setCreatedAt()
     {
         if (!isset($this->created_at)) {
@@ -179,9 +154,6 @@ class Document
     }
     #[PrePersist]
     #[PreUpdate]
-    /**
-     * @return void
-     */
     public function setUpdatedAt()
     {
         $this->updated_at = new DateTime();

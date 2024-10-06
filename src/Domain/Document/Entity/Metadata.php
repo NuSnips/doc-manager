@@ -46,19 +46,11 @@ class Metadata
     #[Column(name: 'updated_at', type: 'datetime')]
     private DateTime $updated_at;
 
-
-
-    /**
-     * @return int
-     */
     public function getId(): int
     {
         return $this->id;
     }
 
-    /**
-     * @return \App\Domain\Document\Entity\Document
-     */
     public function getDocument(): Document
     {
         if ($this->document === null) {
@@ -66,10 +58,7 @@ class Metadata
         }
         return $this->document;
     }
-    /**
-     * @param \App\Domain\Document\Entity\Document $document
-     * @return \App\Domain\Document\Entity\Metadata
-     */
+
     public function setDocument(Document $document): self
     {
         $this->document = $document;
@@ -79,55 +68,33 @@ class Metadata
         return $this;
     }
 
-
-    /**
-     * @return int
-     */
     public function getSize(): string
     {
         return $this->size;
     }
 
-    /**
-     * @param string $size
-     * @return \App\Domain\Document\Entity\Metadata
-     */
     public function setSize(string $size): self
     {
         $this->size = $size;
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @param string $type
-     * @return \App\Domain\Document\Entity\Metadata
-     */
     public function setType(string $type): self
     {
         $this->type = $type;
         return $this;
     }
 
-    /**
-     * @return array|null
-     */
     public function getTags(): ?array
     {
         return $this->tags;
     }
 
-    /**
-     * @param mixed $tags
-     * @return \App\Domain\Document\Entity\Metadata
-     */
     public function setTags(?array $tags): self
     {
         $this->tags = $tags;
@@ -135,27 +102,18 @@ class Metadata
     }
 
 
-    /**
-     * Summary of getCreatedAt
-     * @return \DateTime
-     */
     public function getCreatedAt(): DateTime
     {
         return $this->created_at;
     }
 
-    /**
-     * @return \DateTime
-     */
     public function getUpdatedAt(): DateTime
     {
         return $this->updated_at;
     }
 
     #[PrePersist]
-    /**
-     * @return void
-     */
+
     public function setCreatedAt(): void
     {
         if (!isset($this->created_at)) {
@@ -165,9 +123,6 @@ class Metadata
 
     #[PrePersist]
     #[PreUpdate]
-    /**
-     * @return void
-     */
     public function setUpdatedAt(): void
     {
         $this->updated_at = new DateTime();
