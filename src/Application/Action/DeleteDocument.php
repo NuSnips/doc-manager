@@ -6,13 +6,14 @@ namespace App\Application\Action;
 
 use App\Application\Service\DocumentService;
 use App\Domain\Document\Entity\Document;
+use App\Domain\Document\Storage\DocumentStorageInterface;
 use App\Infrastructure\Storage\DocumentStorage;
 use Exception;
 
 class DeleteDocument
 {
 
-    public function __construct(private DocumentService $documentService, private DocumentStorage $documentStorage) {}
+    public function __construct(private DocumentService $documentService, private DocumentStorageInterface $documentStorage) {}
     public function execute(Document $document)
     {
         // Get the document

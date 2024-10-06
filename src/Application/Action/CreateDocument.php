@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Action;
 
 use App\Application\Service\DocumentService;
+use App\Domain\Document\Storage\DocumentStorageInterface;
 use App\Domain\User\Entity\User;
 use App\Infrastructure\Storage\DocumentStorage;
 use Exception;
@@ -14,7 +15,7 @@ use Slim\Psr7\UploadedFile;
 class CreateDocument
 {
 
-    public function __construct(private DocumentService $documentService, private DocumentStorage $documentStorage) {}
+    public function __construct(private DocumentService $documentService, private DocumentStorageInterface $documentStorage) {}
     public function execute(array $uploadedFiles, User $user, array $tags = [])
     {
 
@@ -22,12 +23,13 @@ class CreateDocument
         // Save the uploaded file
         if ($uploadedFiles) {
             $uploadedFile = $uploadedFiles['document'];
-            $fileName = str_replace(' ', '_', basename($uploadedFile->getClientFilename()));;
+            $fileName = time() . "_" . $uploadedFile->getClientFilename();
+            $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
             try {
-                $fileUploaded = $this->documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
+                $this->documentStorage->saveUploadedFile($fileName, $uploadedFile,  $email);
 
                 $data = [];
-                $filePath = $user->getEmail() . DIRECTORY_SEPARATOR . $fileName;
+                $filePath = $user->getEmail();
                 $fileType = $uploadedFile->getClientMediaType();
                 $fileSize = $uploadedFile->getSize(); // bytes
                 $data['name'] = $fileName;
