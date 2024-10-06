@@ -27,7 +27,7 @@ class CreateDocument
         }
         // Save the uploaded file
         $uploadedFile = $uploadedFiles['document'];
-        $fileName = time() . "_" . $uploadedFile->getClientFilename();
+        $fileName = time() . "_" . str_replace(" ", "_", $uploadedFile->getClientFilename());
         // $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
 
         try {
