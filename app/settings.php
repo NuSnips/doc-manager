@@ -23,7 +23,7 @@ use Psr\Container\ContainerInterface;
 return function (ContainerInterface $container) {
     $container->set('settings', function () {
         return [
-            'displayErrorDetails' => true,
+            'displayErrorDetails' => false,
             'logErrorDetails' => true,
             'logErrors' => true,
             'doctrine' => [
