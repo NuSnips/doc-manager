@@ -129,6 +129,7 @@ Make sure your MySQL server is running, then create the database.
 ```
 mysql -u root -p
 CREATE DATABASE <your_database_name>;
+exit;
 ```
 
 Run the database migrations from inside the project folder.
@@ -185,6 +186,8 @@ Use an application such as Postman to access the API endpoints.
             "token": "eyJhbGciOiJIUzI1NiIsInR..."
         }
       ```
+
+      Use this generated token to authenticate other API requests by adding it as a Bearer token.
 
 3.  Create a document
 
