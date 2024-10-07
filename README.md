@@ -151,6 +151,8 @@ php vendor/bin/pest
 
 ### API endpoints
 
+Use an application such as Postman to access the API endpoints.
+
 1.  Register a user
     - Endpoint `POST /register`
     - Description: Registers a user
