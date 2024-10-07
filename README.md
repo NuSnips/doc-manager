@@ -67,6 +67,88 @@ This outlines the architecture and the design of this sample Document Management
 
 Contains the Controllers that manages incoming request, validation, and response formatting.
 
+### Current Version: `v1.0.0`
+
+## Installation
+
+Follow these steps to install and run this application.
+
+#### Prerequisites
+
+Make sure you have the following installed.
+
+- PHP 8.2
+- Composer
+- MySQL 8
+
+#### Step 1: Clone the repository
+
+Clone the repository to your local machine.
+
+```
+gh repo clone NuSnips/doc-manager
+cd doc-manager
+```
+
+#### Step 2: Install dependencies
+
+Run Composer to install the required dependencies
+
+```
+composer install
+```
+
+#### Step 3: Configure environment variables
+
+Ceate a .env file to configure your environment variables for the database connection and other settings. Use the .env.axample file as a template.
+
+```
+cp .env.example .env
+```
+
+Edit the .env file with your database and other environment details.
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=<your_database_name>
+DB_USER=<your_mysql_username>
+DB_PASSWORD=<your_mysql_password>
+
+JWT_SECRET="=uYonSPsh0ZhSDpmYarEepLYQvb5QvMTdEFStCpiVe2E="
+
+ELASTICSEARCH_HOST="https://14ce0edeb0144ed0a2c532f218330623.us-central1.gcp.cloud.es.io:443"
+ELASTICSEARCH_API_KEY="ZXRXa1ZwSUJKZTJpU0JYckZpZjE6TUhySEN5RE9SaEtaTXBGcEQxVmlMZw"
+
+```
+
+#### Setp 4: Setup the database
+
+Make sure your MySQL server is running, then create the database.
+
+```
+mysql -u root -p
+CREATE DATABASE <your_database_name>;
+```
+
+Run the database migrations from inside the project folder.
+
+```
+php vendor/bin/doctrine orm:schema-tool:create
+```
+
+#### Setup 5: Run the application.
+
+```
+php -S localhost:8080 -t public
+```
+
+Run tests
+
+```
+php vendor/bin/pest
+```
+
 ### API endpoints
 
 1.  Register a user
@@ -179,38 +261,3 @@ Contains the Controllers that manages incoming request, validation, and response
         "link": "http://doc-manager.test/documents/download/af0c9ef6dce8fd34f17b538b62439865"
     }
     ```
-
-### Instructions
-
-Clone the repo
-
-```
-gh repo clone NuSnips/doc-manager
-```
-
-Install dependencies
-
-```
-composer install
-```
-
-Create MySQL database
-
-```
-mysql -u root -p
-
-CREATE DATABASE document_db;
-
-```
-
-Run migrations
-
-```
-php vendor/bin/doctrine orm:schema-tool:create
-```
-
-Run tests
-
-```
-php vendor/bin/pest
-```
