@@ -38,7 +38,7 @@ class DocumentController
     {
         // Search if query available
         $queryParams = $request->getQueryParams();
-        
+
         if (isset($queryParams['q']) && $queryParams['q'] != null) {
             $documents = $this->documentService->search($queryParams['q']);
         } else {
@@ -100,8 +100,13 @@ class DocumentController
 
         // Get the form data
         $data = $request->getParsedBody();
+
+        // Add validation to validate that $data is an array and contains all required fields
+        if (!is_array($data) || !$this->validateRequestData($data)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
         $tags = $data['tags'] ?? [];
-        // TODO: Valdidate and sanitize data
         try {
             // Create document
             $document = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
@@ -193,5 +198,19 @@ class DocumentController
         }
         $documentStorage->downloadDocument($document);
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+    }
+
+    private function validateRequestData(array $data): bool
+    {
+
+        $requiredFields = ['tags'];
+        foreach ($requiredFields as $field) {
+            // Check if the field is set and is an array, and also check if it's not empty
+            if (isset($data[$field]) && (!is_array($data[$field]) || empty($data[$field]))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -109,6 +109,7 @@ cp .env.example .env
 Edit the .env file with your database and other environment details.
 
 ```
+APP_URL=<your-app-url> (eg: http://localhost:8080/)
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=<your_database_name>
