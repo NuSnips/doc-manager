@@ -109,7 +109,7 @@ cp .env.example .env
 Edit the .env file with your database and other environment details.
 
 ```
-APP_URL=<your-app-url> (eg: http://localhost:8080/)
+APP_URL=<your-app-url> (eg: http://localhost:8080)
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=<your_database_name>
@@ -264,6 +264,8 @@ Use an application such as Postman to access the API endpoints.
     {
         "success": true,
         "message": "Document shareable link generated successfully.",
-        "link": "http://doc-manager.test/documents/download/af0c9ef6dce8fd34f17b538b62439865"
+        "link": "http://localhost/documents/download/af0c9ef6dce8fd34f17b538b62439865"
     }
     ```
+
+    Open the link in a browser to download.
