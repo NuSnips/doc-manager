@@ -29,6 +29,8 @@ $elasticSearch = require __DIR__ . "/../app/elasticsearch.php";
 $elasticSearch($container);
 $app = SlimAppFactory::create($container);
 
+// Bugfix: accept raw json
+$app->addBodyParsingMiddleware();
 
 $middleware = require __DIR__ . "/../app/middleware.php";
 $middleware($app);

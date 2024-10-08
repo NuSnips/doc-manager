@@ -15,7 +15,11 @@ class LoginUserController
     public function login(Request $request, Response $response)
     {
         $data = $request->getParsedBody();
-        // TODO: Valdidate and sanitize data
+        // Add validation to validate that $data is an array and contains all required fields
+        if (!is_array($data) || !$this->validateRequestData($data)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
 
         $email = $data['email'];
         $password = $data['password'];
@@ -29,5 +33,16 @@ class LoginUserController
         $token = $this->authenticationService->generateToken($user);
         $response->getBody()->write(json_encode(['success' => 'true', 'token' => $token->getToken()]));
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+    }
+
+    private function validateRequestData(array $data): bool
+    {
+        $requiredFields = ['email', 'password'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return false;
+            }
+        }
+        return true;
     }
 }

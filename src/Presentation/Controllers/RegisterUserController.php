@@ -20,9 +20,13 @@ class RegisterUserController
     ) {}
     public function register(Request $request, Response $response)
     {
-        $data = $request->getParsedBody();
-        // TODO: Valdidate and sanitize data
 
+        $data = $request->getParsedBody();
+        // Add validation to validate that $data is an array and contains all required fields
+        if (!is_array($data) || !$this->validateRequestData($data)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
         $first_name = $data['first_name'];
         $last_name = $data['last_name'];
         $email = $data['email'];
@@ -40,5 +44,16 @@ class RegisterUserController
         }
         $response->getBody()->write(json_encode(['success' => true, 'message' => 'User registered.']));
         return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+    }
+
+    private function validateRequestData(array $data): bool
+    {
+        $requiredFields = ['first_name', 'last_name', 'email', 'password'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return false;
+            }
+        }
+        return true;
     }
 }
