@@ -9,8 +9,10 @@ use App\Application\Action\DeleteDocument;
 use App\Domain\DocumentShare\Repository\DocumentShareRepository;
 use App\Presentation\Controllers\DocumentController;
 use App\Domain\User\Entity\User;
+use App\Presentation\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\UploadedFileInterface;
 
 beforeEach(function () {
     $this->documentService = Mockery::mock(DocumentServiceInterface::class);
@@ -18,6 +20,10 @@ beforeEach(function () {
     $this->createDocument = Mockery::mock(CreateDocument::class);
     $this->deleteDocument = Mockery::mock(DeleteDocument::class);
     $this->documentShareRepository = Mockery::mock(DocumentShareRepository::class);
+    $this->inputValidator = Mockery::mock(InputValidator::class);
+
+    $this->request = Mockery::mock(Request::class);
+    $this->response = Mockery::mock(Response::class);
 
     $this->controller = new DocumentController(
         $this->documentService,
@@ -92,6 +98,29 @@ it('can get a single document', function () {
     $this->controller->show($request, $response, 1);
 });
 
+
+it('returns 400 when data is missing', function () {
+    $token = 'Bearer someValidToken';
+    $user = Mockery::mock(User::class);
+    $document = Mockery::mock(Document::class);
+
+    $this->doctrineAuthService->shouldReceive('getUser')->with($token)->andReturn($user);
+
+    $data = null;
+
+    $this->request->shouldReceive('getHeaderLine')->with('Authorization')->andReturn($token);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->request->shouldReceive('getUploadedFiles')->andReturn([]);
+
+    $this->response->shouldReceive('getBody->write')
+        ->once()
+        ->with(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
+
+    $this->controller->store($this->request, $this->response, $this->inputValidator);
+});
+
 it('can store a document', function () {
     $token = 'Bearer someValidToken';
     $user = Mockery::mock(User::class);
@@ -99,27 +128,26 @@ it('can store a document', function () {
 
     $this->doctrineAuthService->shouldReceive('getUser')->with($token)->andReturn($user);
 
-    // Mock request body data
     $data = [
         'tags' => ['tag1', 'tag2']
     ];
 
-    $request = Mockery::mock(Request::class);
-    $request->shouldReceive('getHeaderLine')->with('Authorization')->andReturn($token);
-    $request->shouldReceive('getParsedBody')->andReturn($data);
-    $request->shouldReceive('getUploadedFiles')->andReturn([]);
+    $this->request->shouldReceive('getHeaderLine')->with('Authorization')->andReturn($token);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->request->shouldReceive('getUploadedFiles')->andReturn([]);
 
-    $response = Mockery::mock(Response::class);
-    $response->shouldReceive('getBody->write')->with(Mockery::on(function ($json) {
+    $this->response->shouldReceive('getBody->write')->with(Mockery::on(function ($json) {
         $data = json_decode($json, true);
         return $data['success'] === true;
     }))->once();
-    $response->shouldReceive('withHeader')->andReturnSelf();
-    $response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
 
     $this->createDocument->shouldReceive('execute')->with([], $user, ['tag1', 'tag2'])->andReturn($document);
+    $this->inputValidator->shouldReceive('validate')
+        ->andReturn(true);
 
-    $this->controller->store($request, $response);
+    $this->controller->store($this->request, $this->response, $this->inputValidator);
 });
 
 it('can delete a document', function () {

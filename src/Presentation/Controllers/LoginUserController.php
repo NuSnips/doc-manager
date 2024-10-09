@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Presentation\Controllers;
 
 use App\Domain\User\Service\AuthenticationService;
+use App\Presentation\Validation\InputValidator;
+use Illuminate\Support\Facades\Validator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -12,12 +14,28 @@ class LoginUserController
 {
 
     public function __construct(private AuthenticationService $authenticationService) {}
-    public function login(Request $request, Response $response)
+    public function login(Request $request, Response $response, InputValidator $inputValidator)
     {
         $data = $request->getParsedBody();
-        // Add validation to validate that $data is an array and contains all required fields
-        if (!is_array($data) || !$this->validateRequestData($data)) {
+
+        if ($data == null || !is_array($data) || count($data) == 0) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        // Validate input data
+        $dataIsValid = $inputValidator->validate(
+            [
+                'email' => $data['email'] ?? '',
+                'password' => $data['password'] ?? ''
+            ],
+            [
+                'email' => ['required' => true, 'email' => true],
+                'password' => ['required' => true]
+            ]
+        );
+        if (!$dataIsValid) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.', 'errors' => $inputValidator->getErrors()]));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
