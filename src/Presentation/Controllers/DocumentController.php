@@ -42,6 +42,7 @@ class DocumentController
 
         if (isset($queryParams['q']) && $queryParams['q'] != null) {
             $documents = $this->documentService->search($queryParams['q']);
+        
         } else {
             $documents = $this->documentService->getDocuments();
         }

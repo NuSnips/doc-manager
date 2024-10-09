@@ -88,7 +88,7 @@ it('can get a single document', function () {
     $request = Mockery::mock(Request::class);
     $response = Mockery::mock(Response::class);
 
-    $response->shouldReceive('withStatus')->with(200)->andReturnSelf(); // Expect withStatus to be called with 200
+    $response->shouldReceive('withStatus')->with(200)->andReturnSelf();
     $response->shouldReceive('getBody->write')->with(Mockery::on(function ($json) {
         $data = json_decode($json, true);
         return isset($data['document']) && $data['document']['id'] === 1;

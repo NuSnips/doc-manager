@@ -27,7 +27,6 @@ it('returns 400 if no data is provided', function () {
     $this->response->shouldReceive('withHeader')->andReturnSelf();
 
     $response = $this->controller->login($this->request, $this->response, $this->inputValidator);
-
     expect($response)->toBe($this->response);
 });
 
@@ -67,14 +66,14 @@ it('validates request data and returns 400 if validation fails', function () {
 });
 
 it('returns 401 if authentication fails', function () {
-    $data = ['email' => 'jane@email.com', 'password' => 'inpassword'];
+    $data = ['email' => 'jane@email.com', 'password' => 'invalidpassword'];
     $this->request->shouldReceive('getParsedBody')->andReturn($data);
 
     $this->inputValidator->shouldReceive('validate')
         ->andReturn(true);
 
     $this->authenticationService->shouldReceive('authenticate')
-        ->with('jane@email.com', 'inpassword')
+        ->with('jane@email.com', 'invalidpassword')
         ->andReturn(null);
 
     $this->response->shouldReceive('getBody->write')

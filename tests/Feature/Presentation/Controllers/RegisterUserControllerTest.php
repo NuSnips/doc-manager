@@ -18,10 +18,8 @@ beforeEach(function () {
     $this->body = Mockery::mock(\Psr\Http\Message\StreamInterface::class);
     $this->request = Mockery::mock(ServerRequestInterface::class);
 
-    // Mock response body
     $this->response->shouldReceive('getBody')->andReturn($this->body);
 
-    // Create controller instance
     $this->controller = new RegisterUserController(
         $this->createUser,
         $this->userService,
@@ -31,7 +29,7 @@ beforeEach(function () {
 
 
 it('returns 400 if request data is null or not an array', function () {
-    $data = []; // or you can use any invalid data structure
+    $data = [];
 
     $this->request->shouldReceive('getParsedBody')->andReturn($data);
     $this->body->shouldReceive('write')->once()
@@ -47,7 +45,7 @@ it('returns 400 if request data is null or not an array', function () {
 
 it('returns 400 if validation fails', function () {
     $data = [
-        'first_name' => '', // Invalid first name
+        'first_name' => '',
         'last_name' => 'Smith',
         'email' => 'invalid-email',
         'password' => 'short'
