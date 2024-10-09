@@ -1,101 +1,147 @@
 <?php
 
-
 use App\Application\Action\CreateUser;
 use App\Domain\User\Entity\User;
 use App\Domain\User\Service\UserServiceInterface;
 use App\Infrastructure\Persistence\DoctrineUserRespository;
+use App\Presentation\Validation\InputValidator;
 use App\Presentation\Controllers\RegisterUserController;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Slim\Psr7\Factory\ResponseFactory;
 
 beforeEach(function () {
     $this->createUser = Mockery::mock(CreateUser::class);
     $this->userService = Mockery::mock(UserServiceInterface::class);
-    $this->doctrineUserRepository = Mockery::mock(DoctrineUserRespository::class);
+    $this->doctrineUserRespository = Mockery::mock(DoctrineUserRespository::class);
+    $this->inputValidator = Mockery::mock(InputValidator::class);
+    $this->response = Mockery::mock(ResponseInterface::class);
+    $this->body = Mockery::mock(\Psr\Http\Message\StreamInterface::class);
+    $this->request = Mockery::mock(ServerRequestInterface::class);
+
+    $this->response->shouldReceive('getBody')->andReturn($this->body);
 
     $this->controller = new RegisterUserController(
         $this->createUser,
         $this->userService,
-        $this->doctrineUserRepository
+        $this->doctrineUserRespository
     );
-
-    $this->responseFactory = new ResponseFactory();
-    $this->response = $this->responseFactory->createResponse();
 });
 
-afterEach(function () {
-    Mockery::close();
+
+it('returns 400 if request data is null or not an array', function () {
+    $data = [];
+
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->body->shouldReceive('write')->once()
+        ->with(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+
+    $this->response->shouldReceive('withStatus')->with(400)->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->with('Content-Type', 'application/json')->andReturnSelf();
+
+    $response = $this->controller->register($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
-it('returns 400 if request data is invalid', function () {
-    $request = Mockery::mock(ServerRequestInterface::class);
-    $request->shouldReceive('getParsedBody')->andReturn(['first_name' => '']);
+it('returns 400 if validation fails', function () {
+    $data = [
+        'first_name' => '',
+        'last_name' => 'Smith',
+        'email' => 'invalid-email',
+        'password' => 'short'
+    ];
 
-    $response = $this->controller->register($request, $this->response);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
 
-    expect((string)$response->getBody())->toContain('Invalid or missing data in request.');
-    expect($response->getStatusCode())->toBe(400);
+    $this->inputValidator->shouldReceive('validate')->andReturn(false);
+    $this->inputValidator->shouldReceive('getErrors')->andReturn(['first_name' => ['The first_name field is required.']]);
+
+    $this->body->shouldReceive('write')->once()
+        ->with(json_encode([
+            'success' => false,
+            'message' => 'Invalid or missing data in request.',
+            'errors' => ['first_name' => ['The first_name field is required.']]
+        ]));
+
+    $this->response->shouldReceive('withStatus')->with(400)->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->with('Content-Type', 'application/json')->andReturnSelf();
+
+    $response = $this->controller->register($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
-it('returns 400 if email already exists', function () {
-    $request = Mockery::mock(ServerRequestInterface::class);
-    $request->shouldReceive('getParsedBody')->andReturn([
-        'first_name' => 'John',
-        'last_name' => 'Doe',
-        'email' => 'john@email.com',
-        'password' => 'password',
-    ]);
+it('returns 400 if user already exists', function () {
+    $data = [
+        'first_name' => 'jane',
+        'last_name' => 'Smith',
+        'email' => 'jane@email.com',
+        'password' => 'password'
+    ];
+    $existingUser = Mockery::mock(User::class);
 
-    $mockUser = Mockery::mock(User::class);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->inputValidator->shouldReceive('validate')->andReturn(true);
 
+    $this->doctrineUserRespository->shouldReceive('findByEmail')->with($data['email'])->andReturn($existingUser);
 
-    $this->doctrineUserRepository->shouldReceive('findByEmail')
-        ->with('john@email.com')
-        ->andReturn($mockUser);
+    $this->body->shouldReceive('write')->once()
+        ->with(json_encode(['success' => false, 'message' => 'User already exists.']));
 
-    $response = $this->controller->register($request, $this->response);
+    $this->response->shouldReceive('withStatus')->with(400)->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->with('Content-Type', 'application/json')->andReturnSelf();
 
-    expect((string)$response->getBody())->toContain('User already exists.');
-    expect($response->getStatusCode())->toBe(400);
+    $response = $this->controller->register($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
 it('returns 400 if there is an error creating the user', function () {
-    $request = Mockery::mock(ServerRequestInterface::class);
-    $request->shouldReceive('getParsedBody')->andReturn([
-        'first_name' => 'John',
-        'last_name' => 'Doe',
-        'email' => 'john@email.com',
-        'password' => 'password',
-    ]);
+    $data = [
+        'first_name' => 'jane',
+        'last_name' => 'Smith',
+        'email' => 'jane@email.com',
+        'password' => 'password'
+    ];
 
-    $this->doctrineUserRepository->shouldReceive('findByEmail')->with('john@email.com')->andReturn(null);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->inputValidator->shouldReceive('validate')->andReturn(true);
+    $this->doctrineUserRespository->shouldReceive('findByEmail')->with($data['email'])->andReturn(null);
+    $this->createUser->shouldReceive('execute')->with($data['first_name'], $data['last_name'], $data['email'], $data['password'])->andReturn(null);
 
-    $this->createUser->shouldReceive('execute')->andReturn(null);
+    $this->body->shouldReceive('write')->once()
+        ->with(json_encode(['success' => false, 'message' => "Error registering user."]));
 
-    $response = $this->controller->register($request, $this->response);
+    $this->response->shouldReceive('withStatus')->with(400)->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->with('Content-Type', 'application/json')->andReturnSelf();
 
-    expect((string)$response->getBody())->toContain('Error registering user.');
-    expect($response->getStatusCode())->toBe(400);
+    $response = $this->controller->register($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
-it('successfully registers a user', function () {
-    $request = Mockery::mock(ServerRequestInterface::class);
-    $request->shouldReceive('getParsedBody')->andReturn([
-        'first_name' => 'John',
-        'last_name' => 'Doe',
-        'email' => 'john@email.com',
-        'password' => 'password',
-    ]);
+it('returns 201 if user is successfully registered', function () {
+    $data = [
+        'first_name' => 'jane',
+        'last_name' => 'Smith',
+        'email' => 'jane@email.com',
+        'password' => 'password'
+    ];
 
-    $this->doctrineUserRepository->shouldReceive('findByEmail')->with('john@email.com')->andReturn(null);
+    $user = Mockery::mock(User::class);
 
-    $mockUser = Mockery::mock(User::class);
-    $this->createUser->shouldReceive('execute')->andReturn($mockUser);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+    $this->inputValidator->shouldReceive('validate')->andReturn(true);
+    $this->doctrineUserRespository->shouldReceive('findByEmail')->with($data['email'])->andReturn(null);
+    $this->createUser->shouldReceive('execute')->with($data['first_name'], $data['last_name'], $data['email'], $data['password'])->andReturn($user);
 
-    $response = $this->controller->register($request, $this->response);
+    $this->body->shouldReceive('write')->once()
+        ->with(json_encode(['success' => true, 'message' => 'User registered.']));
 
-    expect((string)$response->getBody())->toContain('User registered.');
-    expect($response->getStatusCode())->toBe(201);
+    $this->response->shouldReceive('withStatus')->with(201)->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->with('Content-Type', 'application/json')->andReturnSelf();
+
+    $response = $this->controller->register($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });

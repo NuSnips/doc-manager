@@ -24,6 +24,6 @@ return function (App $app) {
     $app->get("/documents/{id:[0-9]+}", [DocumentController::class, 'show'])->add(AuthMiddleware::class);
     $app->post("/documents", [DocumentController::class, 'store'])->add(AuthMiddleware::class);
     $app->delete("/documents/{id:[0-9]+}", [DocumentController::class, 'destroy'])->add(AuthMiddleware::class);
-    $app->get("/documents/generate-url/{id}", [DocumentController::class, 'genrateShareable'])->add(AuthMiddleware::class);
+    $app->get("/documents/generate-url/{id:[0-9]+}", [DocumentController::class, 'genrateShareable'])->add(AuthMiddleware::class);
     $app->get("/documents/download/{token}", [DocumentController::class, 'downloadDocument']);
 };

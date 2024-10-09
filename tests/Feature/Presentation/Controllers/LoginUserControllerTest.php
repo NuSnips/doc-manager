@@ -1,72 +1,119 @@
 <?php
 
-use App\Presentation\Controllers\LoginUserController;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use App\Domain\User\Entity\User;
 use App\Domain\User\Service\AuthenticationService;
-use Slim\Psr7\Response as SlimResponse;
+use App\Domain\User\ValueObject\Token;
+use App\Presentation\Controllers\LoginUserController;
+use App\Presentation\Validation\InputValidator;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
-it('returns 400 if email or password is missing', function () {
-    // Arrange
-    $authenticationService = Mockery::mock(AuthenticationService::class);
-    $controller = new LoginUserController($authenticationService);
-    $request = Mockery::mock(Request::class);
-    $response = new SlimResponse();
+beforeEach(function () {
+    $this->authenticationService = Mockery::mock(AuthenticationService::class);
+    $this->inputValidator = Mockery::mock(InputValidator::class);
+    $this->controller = new LoginUserController($this->authenticationService);
 
-    $request->shouldReceive('getParsedBody')
-        ->andReturn(['email' => 'jane@email.com']); // Password is missing
+    $this->request = Mockery::mock(ServerRequestInterface::class);
+    $this->response = Mockery::mock(ResponseInterface::class);
+});
 
-    $result = $controller->login($request, $response);
+it('returns 400 if no data is provided', function () {
+    $this->request->shouldReceive('getParsedBody')->andReturn(null);
 
-    expect($result->getStatusCode())->toBe(400);
-    expect($result->getBody()->__toString())->toContain('Invalid or missing data in request.');
+    $this->response->shouldReceive('getBody->write')
+        ->once()
+        ->with(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
+
+    $response = $this->controller->login($this->request, $this->response, $this->inputValidator);
+    expect($response)->toBe($this->response);
+});
+
+it('validates request data and returns 400 if validation fails', function () {
+    $data = ['email' => '', 'password' => ''];
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
+
+    $this->inputValidator->shouldReceive('validate')
+        ->with(['email' => '', 'password' => ''], [
+            'email' => ['required' => true, 'email' => true],
+            'password' => ['required' => true]
+        ])
+        ->andReturn(false);
+
+    $this->inputValidator->shouldReceive('getErrors')
+        ->andReturn([
+            'email' => ['The email field is required.'],
+            'password' => ['The password field is required.']
+        ]);
+
+    $this->response->shouldReceive('getBody->write')
+        ->once()
+        ->with(json_encode([
+            'success' => false,
+            'message' => 'Invalid or missing data in request.',
+            'errors' => [
+                'email' => ['The email field is required.'],
+                'password' => ['The password field is required.']
+            ]
+        ]));
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
+
+    $response = $this->controller->login($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
 it('returns 401 if authentication fails', function () {
-    $authenticationService = Mockery::mock(AuthenticationService::class);
-    $controller = new LoginUserController($authenticationService);
-    $request = Mockery::mock(Request::class);
-    $response = new SlimResponse();
+    $data = ['email' => 'jane@email.com', 'password' => 'invalidpassword'];
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
 
-    $request->shouldReceive('getParsedBody')
-        ->andReturn(['email' => 'jane@email.com', 'password' => 'inpassword']);
+    $this->inputValidator->shouldReceive('validate')
+        ->andReturn(true);
 
-    $authenticationService->shouldReceive('authenticate')
-        ->with('jane@email.com', 'inpassword')
+    $this->authenticationService->shouldReceive('authenticate')
+        ->with('jane@email.com', 'invalidpassword')
         ->andReturn(null);
 
-    $result = $controller->login($request, $response);
+    $this->response->shouldReceive('getBody->write')
+        ->once()
+        ->with(json_encode(['success' => 'false', 'message' => 'Invalid credentials']));
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
 
-    expect($result->getStatusCode())->toBe(401);
-    expect($result->getBody()->__toString())->toContain('Invalid credentials');
+    $response = $this->controller->login($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });
 
-it('returns 200 and a token on successful login', function () {
-    $authenticationService = Mockery::mock(AuthenticationService::class);
-    $controller = new LoginUserController($authenticationService);
-    $request = Mockery::mock(Request::class);
-    $response = new SlimResponse();
-    $user = Mockery::mock(\App\Domain\User\Entity\User::class);
-    $token = Mockery::mock(\App\Domain\User\ValueObject\Token::class);
+it('returns 200 and token if authentication is successful', function () {
+    $data = ['email' => 'jane@email.com', 'password' => 'password'];
+    $user = Mockery::mock(User::class);
+    $token = Mockery::mock(Token::class);
 
-    $request->shouldReceive('getParsedBody')
-        ->andReturn(['email' => 'jane@email.com', 'password' => 'password']);
+    $this->request->shouldReceive('getParsedBody')->andReturn($data);
 
-    $authenticationService->shouldReceive('authenticate')
+    $this->inputValidator->shouldReceive('validate')
+        ->andReturn(true);
+
+    $this->authenticationService->shouldReceive('authenticate')
         ->with('jane@email.com', 'password')
         ->andReturn($user);
 
-    $authenticationService->shouldReceive('generateToken')
+    $this->authenticationService->shouldReceive('generateToken')
         ->with($user)
         ->andReturn($token);
-
     $token->shouldReceive('getToken')
-        ->andReturn('valid-token');
+        ->andReturn('fake-jwt-token');
 
-    // Act
-    $result = $controller->login($request, $response);
+    $this->response->shouldReceive('getBody->write')
+        ->once()
+        ->with(json_encode(['success' => 'true', 'token' => 'fake-jwt-token']));
+    $this->response->shouldReceive('withStatus')->andReturnSelf();
+    $this->response->shouldReceive('withHeader')->andReturnSelf();
 
-    // Assert
-    expect($result->getStatusCode())->toBe(200);
-    expect($result->getBody()->__toString())->toContain('valid-token');
+    $response = $this->controller->login($this->request, $this->response, $this->inputValidator);
+
+    expect($response)->toBe($this->response);
 });

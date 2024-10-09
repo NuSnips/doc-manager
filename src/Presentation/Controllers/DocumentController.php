@@ -13,6 +13,7 @@ use App\Domain\DocumentShare\Repository\DocumentShareRepository;
 use App\Domain\User\ValueObject\Token;
 use App\Infrastructure\Service\DoctrineAuthService;
 use App\Infrastructure\Storage\DocumentStorage;
+use App\Presentation\Validation\InputValidator;
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -41,6 +42,7 @@ class DocumentController
 
         if (isset($queryParams['q']) && $queryParams['q'] != null) {
             $documents = $this->documentService->search($queryParams['q']);
+        
         } else {
             $documents = $this->documentService->getDocuments();
         }
@@ -92,7 +94,7 @@ class DocumentController
      * @param \Psr\Http\Message\ResponseInterface $response
      * @return Response
      */
-    public function store(Request $request, Response $response)
+    public function store(Request $request, Response $response, InputValidator $inputValidator)
     {
         // Get the authenticated user
         $tokenString = $request->getHeaderLine('Authorization');
@@ -101,12 +103,30 @@ class DocumentController
         // Get the form data
         $data = $request->getParsedBody();
 
-        // Add validation to validate that $data is an array and contains all required fields
-        if (!is_array($data) || !$this->validateRequestData($data)) {
+        if ($data == null || !is_array($data) || count($data) == 0) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
+
         $tags = $data['tags'] ?? [];
+        $uploadedFiles = $request->getUploadedFiles();
+
+        $dataIsValid = $inputValidator->validate([
+            'tags' => $data['tags'] ?? [],
+            'document' => $uploadedFiles['document'] ?? null
+        ], [
+            'tags' => ['required' => true, 'array' => true],
+            'document' => [
+                'required' => true,
+            ]
+        ]);
+        if (!$dataIsValid) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid or missing data in request.', 'errors' => $inputValidator->getErrors()]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+
+
         try {
             // Create document
             $document = $this->createDocument->execute($request->getUploadedFiles(), $user, $tags);
